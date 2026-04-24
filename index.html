@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Walmart Dry Goods | Executive Lead Tool</title>
+    <style>
+        :root { --walmart-blue: #0071dc; --walmart-yellow: #ffc220; --success: #2e7d32; --danger: #cc0000; --recovery: #673ab7; }
+        body { font-family: 'Segoe UI', sans-serif; padding: 15px; background: #f4f7f6; color: #333; }
+        .header { background: var(--walmart-blue); color: white; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 10px; }
+        
+        /* Metric Cards for the $105k Goal */
+        .metrics-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .stat-card { background: white; padding: 10px; border-radius: 8px; border-top: 4px solid var(--danger); text-align: center; font-size: 0.8em; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        
+        .card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-left: 6px solid #ccc; }
+        .active-task { border-left-color: var(--walmart-yellow); }
+        .completed-task { border-left-color: var(--success); background: #f1f8e9; }
+        
+        input { padding: 12px; width: 100%; margin-top: 8px; border-radius: 6px; border: 1px solid #ddd; box-sizing: border-box; }
+        button { padding: 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; margin-top: 5px; }
+        .btn-start { background: var(--walmart-blue); color: white; width: 100%; }
+        .btn-done { background: var(--success); color: white; width: 100%; }
+        .btn-recovery { background: var(--recovery); color: white; width: 100%; font-size: 0.8em; }
+        .btn-report { background: #333; color: white; width: 100%; margin-top: 20px; padding: 15px; }
+        
+        .hidden { display: none; }
+        .badge { font-size: 0.7em; padding: 2px 6px; border-radius: 5px; text-transform: uppercase; margin-left: 5px; }
+        .badge-shrink { background: #ffebee; color: var(--danger); }
+        .badge-sales { background: #ede7f6; color: var(--recovery); }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2 style="margin:0;">Dry Goods Ops</h2>
+        <small>Inventory Strategy Tool</small>
+    </div>
+
+    <div class="metrics-bar">
+        <div class="stat-card">
+            <strong>SHRINK TARGET</strong><br>
+            <span style="color:var(--danger); font-size: 1.2em;">$84,000</span><br>
+            (20% Reduc. Goal)
+        </div>
+        <div class="stat-card" style="border-top-color: var(--success);">
+            <strong>DAILY IMPACT</strong><br>
+            <span id="mitigation-count" style="color:var(--success); font-size: 1.2em;">0</span><br>
+            Mitigations Logged
+        </div>
+    </div>
+    
+    <div id="input-section" class="card">
+        <strong>Daily Staffing Assignment</strong>
+        <input type="text" id="names" placeholder="Enter names (Sarah, Mike...)">
+        <button class="btn-start" onclick="generatePlan()">Initialize Shift Plan</button>
+    </div>
+
+    <div id="task-section"></div>
+
+    <button id="report-btn" class="btn-report hidden" onclick="downloadReport()">Download Strategy Report</button>
+
+    <script>
+        // Data Structure for your specific Petoskey Dry Goods aisles
+        const aisleData = [
+            { n: "Aisle 1 (Cereal)", shrinkFix: "On-Hand Accuracy", slumpFix: "Signage/Rollbacks" },
+            { n: "Aisle 7 (Water)", shrinkFix: "Leak/Damage Claims", slumpFix: "Stocking Frequency" },
+            { n: "Aisle 4 (Pasta)", shrinkFix: "Deep Out Scan", slumpFix: "Cross-Merchandising" }
+        ];
+
+        let taskLogs = [];
+        let taskStartTimes = {};
+        let totalMitigations = 0;
+
+        // Initialize the floor plan
+        function generatePlan() {
+            const nameInput = document.getElementById('names').value;
+            if(!nameInput) return alert("Enter names first!");
+            const associates = nameInput.split(',').map(s => s.trim());
+            
+            document.getElementById('input-section').classList.add('hidden');
+            document.getElementById('report-btn').classList.remove('hidden');
+            
+            const taskSection = document.getElementById('task-section');
+            const now = new Date();
+            
+            taskSection.innerHTML = "<h3>Floor Status</h3>";
+
+            aisleData.forEach((aisle, index) => {
+                const assignee = associates[index % associates.length];
+                const taskID = `task-${index}`;
+                taskStartTimes[taskID] = now;
+
+                taskSection.innerHTML += `
+                    <div class="card active-task" id="card-${taskID}">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <strong>${aisle.n}</strong>
+                            <span class="badge badge-shrink">Shrink Fix</span>
+                        </div>
+                        <div style="font-size:0.9em; margin: 5px 0;">Lead: <b>${assignee}</b></div>
+                        
+                        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:5px; margin-bottom:10px;">
+                            <button style="background:#eee;" onclick="logProgress('${taskID}', '${aisle.n}', '${assignee}', '25%')">25%</button>
+                            <button style="background:#eee;" onclick="logProgress('${taskID}', '${aisle.n}', '${assignee}', '50%')">50%</button>
+                            <button style="background:#eee;" onclick="logProgress('${taskID}', '${aisle.n}', '${assignee}', '75%')">75%</button>
+                        </div>
+
+                        <button class="btn-recovery" onclick="triggerRecovery('${taskID}', '${aisle.n}', '${assignee}')">Identify Sales Slump</button>
+                        <button class="btn-done" id="done-${taskID}" onclick="logProgress('${taskID}', '${aisle.n}', '${assignee}', '100%')">Mark Aisle Complete</button>
+                        
+                        <div id="status-${taskID}" style="font-size:0.75em; margin-top:8px; color:#666;">Started: ${now.toLocaleTimeString()}</div>
+                        <div id="recovery-note-${taskID}" style="font-size:0.75em; color:var(--recovery); font-weight:bold; margin-top:5px;"></div>
+                    </div>
+                `;
+            });
+        }
+
+        // Tracking Logic
+        function logProgress(id, aisle, name, percent) {
+            const now = new Date();
+            const elapsed = Math.round((now - taskStartTimes[id]) / 60000);
+            const shrinkAction = aisleData.find(a => a.n === aisle).shrinkFix;
+            
+            // Increment the mitigation counter if they progress
+            totalMitigations++;
+            document.getElementById('mitigation-count').innerText = totalMitigations;
+
+            document.getElementById(`status-${id}`).innerHTML = `<b>Progress: ${percent}</b> (${elapsed}m elapsed)`;
+            
+            if(percent === '100%') {
+                document.getElementById(`card-${id}`).className = "card completed-task";
+                document.getElementById(`done-${id}`).classList.add('hidden');
+            }
+
+            taskLogs.push({ aisle, name, time: now.toLocaleTimeString(), status: percent, elapsed, type: 'Shrink Mitigation', detail: shrinkAction });
+        }
+
+        function triggerRecovery(id, aisle, name) {
+            const item = prompt("Identify slumping item:");
+            if(!item) return;
+            const fix = aisleData.find(a => a.n === aisle).slumpFix;
+            const now = new Date();
+            
+            document.getElementById(`recovery-note-${id}`).innerHTML = `RECOVERY: ${item} (${fix})`;
+            
+            taskLogs.push({ aisle, name, time: now.toLocaleTimeString(), status: 'RECOVERY', type: 'Sales Recovery', detail: `${item} fix: ${fix}` });
+        }
+
+        // Professional Report Export
+        function downloadReport() {
+            let report = `WALMART EXECUTIVE OPERATIONS REPORT\n`;
+            report += `DEPT: Dry Goods | GOAL: 20% Shrink Reduction\n`;
+            report += `TARGET MAX SHRINK: $84,000 (Prev: $105k)\n`;
+            report += `-------------------------------------------\n\n`;
+            
+            taskLogs.forEach(log => {
+                report += `[${log.time}] ${log.name} | ${log.aisle}\n`;
+                report += `ACTION: ${log.type} (${log.detail})\n`;
+                report += `-------------------------------------------\n`;
+            });
+
+            const blob = new Blob([report], { type: 'text/plain' });
+            const anchor = document.createElement('a');
+            anchor.download = `Shrink_Strategy_Report.txt`;
+            anchor.href = URL.createObjectURL(blob);
+            anchor.click();
+        }
+    </script>
+</body>
+</html>
