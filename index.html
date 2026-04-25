@@ -2,49 +2,60 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Walmart Dry Goods | Executive Lead Tool</title>
+    <title>Precision Dry Goods | Executive Lead Tool</title>
     <style>
-        :root { --walmart-blue: #0071dc; --walmart-yellow: #ffc220; --success: #2e7d32; --danger: #cc0000; --recovery: #673ab7; }
+        /* Note: Variables renamed to generic 'brand' terms to maintain professional neutrality */
+        :root { 
+            --brand-primary: #0071dc; 
+            --brand-accent: #ffc220; 
+            --success-color: #2e7d32; 
+            --danger-color: #cc0000; 
+            --recovery-color: #673ab7; 
+        }
+        
         body { font-family: 'Segoe UI', sans-serif; padding: 15px; background: #f4f7f6; color: #333; }
-        .header { background: var(--walmart-blue); color: white; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 10px; }
         
-        /* Metric Cards for the $105k Goal */
+        /* HEADER SECTION: Professional branding for Store Ops */
+        .header { background: var(--brand-primary); color: white; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 10px; }
+        
+        /* DASHBOARD SECTION: High-level metrics for management review */
         .metrics-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        .stat-card { background: white; padding: 10px; border-radius: 8px; border-top: 4px solid var(--danger); text-align: center; font-size: 0.8em; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .stat-card { background: white; padding: 10px; border-radius: 8px; border-top: 4px solid var(--danger-color); text-align: center; font-size: 0.8em; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         
+        /* CARD SECTION: Individual aisle/task tracking cards */
         .card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-left: 6px solid #ccc; }
-        .active-task { border-left-color: var(--walmart-yellow); }
-        .completed-task { border-left-color: var(--success); background: #f1f8e9; }
+        .active-task { border-left-color: var(--brand-accent); }
+        .completed-task { border-left-color: var(--success-color); background: #f1f8e9; }
         
         input { padding: 12px; width: 100%; margin-top: 8px; border-radius: 6px; border: 1px solid #ddd; box-sizing: border-box; }
         button { padding: 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; margin-top: 5px; }
-        .btn-start { background: var(--walmart-blue); color: white; width: 100%; }
-        .btn-done { background: var(--success); color: white; width: 100%; }
-        .btn-recovery { background: var(--recovery); color: white; width: 100%; font-size: 0.8em; }
+        .btn-start { background: var(--brand-primary); color: white; width: 100%; }
+        .btn-done { background: var(--success-color); color: white; width: 100%; }
+        .btn-recovery { background: var(--recovery-color); color: white; width: 100%; font-size: 0.8em; }
         .btn-report { background: #333; color: white; width: 100%; margin-top: 20px; padding: 15px; }
         
         .hidden { display: none; }
         .badge { font-size: 0.7em; padding: 2px 6px; border-radius: 5px; text-transform: uppercase; margin-left: 5px; }
-        .badge-shrink { background: #ffebee; color: var(--danger); }
-        .badge-sales { background: #ede7f6; color: var(--recovery); }
+        .badge-shrink { background: #ffebee; color: var(--danger-color); }
+        .badge-sales { background: #ede7f6; color: var(--recovery-color); }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h2 style="margin:0;">Dry Goods Ops</h2>
-        <small>Inventory Strategy Tool</small>
+        <h2 style="margin:0;">Precision Operations</h2>
+        <small>Department Strategy Tool</small>
     </div>
 
     <div class="metrics-bar">
         <div class="stat-card">
             <strong>SHRINK TARGET</strong><br>
-            <span style="color:var(--danger); font-size: 1.2em;">$84,000</span><br>
+            <span style="color:var(--danger-color); font-size: 1.2em;">$84,000</span><br>
             (20% Reduc. Goal)
         </div>
-        <div class="stat-card" style="border-top-color: var(--success);">
+        <div class="stat-card" style="border-top-color: var(--success-color);">
             <strong>DAILY IMPACT</strong><br>
-            <span id="mitigation-count" style="color:var(--success); font-size: 1.2em;">0</span><br>
+            <span id="mitigation-count" style="color:var(--success-color); font-size: 1.2em;">0</span><br>
             Mitigations Logged
         </div>
     </div>
@@ -57,10 +68,10 @@
 
     <div id="task-section"></div>
 
-    <button id="report-btn" class="btn-report hidden" onclick="downloadReport()">Download Strategy Report</button>
+    <button id="report-btn" class="btn-report hidden" onclick="downloadReport()">Download Executive Strategy Report</button>
 
     <script>
-        // Data Structure for your specific Petoskey Dry Goods aisles
+        // 1. DATA CONFIG: Maps aisles to specific management goals
         const aisleData = [
             { n: "Aisle 1 (Cereal)", shrinkFix: "On-Hand Accuracy", slumpFix: "Signage/Rollbacks" },
             { n: "Aisle 7 (Water)", shrinkFix: "Leak/Damage Claims", slumpFix: "Stocking Frequency" },
@@ -71,7 +82,7 @@
         let taskStartTimes = {};
         let totalMitigations = 0;
 
-        // Initialize the floor plan
+        // 2. INITIALIZATION: Builds the floor plan cards based on employee input
         function generatePlan() {
             const nameInput = document.getElementById('names').value;
             if(!nameInput) return alert("Enter names first!");
@@ -108,19 +119,18 @@
                         <button class="btn-done" id="done-${taskID}" onclick="logProgress('${taskID}', '${aisle.n}', '${assignee}', '100%')">Mark Aisle Complete</button>
                         
                         <div id="status-${taskID}" style="font-size:0.75em; margin-top:8px; color:#666;">Started: ${now.toLocaleTimeString()}</div>
-                        <div id="recovery-note-${taskID}" style="font-size:0.75em; color:var(--recovery); font-weight:bold; margin-top:5px;"></div>
+                        <div id="recovery-note-${taskID}" style="font-size:0.75em; color:var(--recovery-color); font-weight:bold; margin-top:5px;"></div>
                     </div>
                 `;
             });
         }
 
-        // Tracking Logic
+        // 3. TRACKING LOGIC: Records timestamps and increments the mitigation counter
         function logProgress(id, aisle, name, percent) {
             const now = new Date();
             const elapsed = Math.round((now - taskStartTimes[id]) / 60000);
             const shrinkAction = aisleData.find(a => a.n === aisle).shrinkFix;
             
-            // Increment the mitigation counter if they progress
             totalMitigations++;
             document.getElementById('mitigation-count').innerText = totalMitigations;
 
@@ -134,6 +144,7 @@
             taskLogs.push({ aisle, name, time: now.toLocaleTimeString(), status: percent, elapsed, type: 'Shrink Mitigation', detail: shrinkAction });
         }
 
+        // 4. SALES RECOVERY: Allows lead to log corrective actions for slow-moving items
         function triggerRecovery(id, aisle, name) {
             const item = prompt("Identify slumping item:");
             if(!item) return;
@@ -145,11 +156,11 @@
             taskLogs.push({ aisle, name, time: now.toLocaleTimeString(), status: 'RECOVERY', type: 'Sales Recovery', detail: `${item} fix: ${fix}` });
         }
 
-        // Professional Report Export
+        // 5. DATA EXPORT: Generates a professional text report for store management
         function downloadReport() {
-            let report = `WALMART EXECUTIVE OPERATIONS REPORT\n`;
+            let report = `STORE OPERATIONS PERFORMANCE REPORT\n`;
             report += `DEPT: Dry Goods | GOAL: 20% Shrink Reduction\n`;
-            report += `TARGET MAX SHRINK: $84,000 (Prev: $105k)\n`;
+            report += `TARGET MAX SHRINK: $84,000 (Baseline: $105k)\n`;
             report += `-------------------------------------------\n\n`;
             
             taskLogs.forEach(log => {
@@ -160,7 +171,7 @@
 
             const blob = new Blob([report], { type: 'text/plain' });
             const anchor = document.createElement('a');
-            anchor.download = `Shrink_Strategy_Report.txt`;
+            anchor.download = `Precision_Ops_Report.txt`;
             anchor.href = URL.createObjectURL(blob);
             anchor.click();
         }
