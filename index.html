@@ -83,7 +83,53 @@
         let totalMitigations = 0;
 
         // 2. INITIALIZATION: Builds the floor plan cards based on employee input
+        // 2. INITIALIZATION: Builds the floor plan cards based on employee input
         function generatePlan() {
+            const nameInput = document.getElementById('names').value;
+            if(!nameInput) return alert("Enter names first!");
+            const associates = nameInput.split(',').map(s => s.trim());
+            
+            document.getElementById('input-section').classList.add('hidden');
+            document.getElementById('report-btn').classList.remove('hidden');
+            
+            const taskSection = document.getElementById('task-section');
+            const now = new Date();
+            
+            taskSection.innerHTML = "<h3>Floor Status</h3>";
+
+            aisleData.forEach((aisle, index) => {
+                const assignee = associates[index % associates.length];
+                const taskID = `task-${index}`;
+                taskStartTimes[taskID] = now;
+
+                taskSection.innerHTML += `
+                    <div class="card active-task" id="card-${taskID}">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <strong>${aisle.n}</strong>
+                            <span class="badge badge-shrink">Shrink Fix</span>
+                        </div>
+                        <div style="font-size:0.9em; margin: 5px 0;">Lead: <b>${assignee}</b></div>
+                        
+                        <div style="font-size:0.8em; color:var(--danger-color); margin-bottom:10px;">
+                            <strong>Required Fix:</strong> ${aisle.shrinkFix}
+                        </div>
+                        
+                        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:5px; margin-bottom:10px;">
+                            <button style="background:#eee;" onclick="logProgress('${taskID}', '${aisle.n}', '${assignee}', '25%')">25%</button>
+                            <button style="background:#eee;" onclick="logProgress('${taskID}', '${aisle.n}', '${assignee}', '50%')">50%</button>
+                            <button style="background:#eee;" onclick="logProgress('${taskID}', '${aisle.n}', '${assignee}', '75%')">75%</button>
+                        </div>
+
+                        <button class="btn-recovery" onclick="triggerRecovery('${taskID}', '${aisle.n}', '${assignee}')">Identify Sales Slump</button>
+                        <button class="btn-done" id="done-${taskID}" onclick="logProgress('${taskID}', '${aisle.n}', '${assignee}', '100%')">Mark Aisle Complete</button>
+                        
+                        <div id="status-${taskID}" style="font-size:0.75em; margin-top:8px; color:#666;">Started: ${now.toLocaleTimeString()}</div>
+                        <div id="recovery-note-${taskID}" style="font-size:0.75em; color:var(--recovery-color); font-weight:bold; margin-top:5px;"></div>
+                    </div>
+                `;
+            });
+        }
+       /**********************************************************function generatePlan() {
             const nameInput = document.getElementById('names').value;
             if(!nameInput) return alert("Enter names first!");
             const associates = nameInput.split(',').map(s => s.trim());
@@ -123,7 +169,7 @@
                     </div>
                 `;
             });
-        }
+        }**************************************************************/
 
         // 3. TRACKING LOGIC: Records timestamps and increments the mitigation counter
         function logProgress(id, aisle, name, percent) {
